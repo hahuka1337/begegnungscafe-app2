@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Poll, PollVote } from '../types';
 import { Card, Button } from './Shared';
