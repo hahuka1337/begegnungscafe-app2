@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider, useApp } from './services/store';
 import { Layout, OnboardingModal, Button, Input } from './components/Shared';
 
-// Pages
+// Pages - Import from src/pages
 import Home from './pages/Home';
 import Events from './pages/Events';
 import Groups from './pages/Groups';
@@ -143,9 +143,9 @@ const AppContent = () => {
 const App: React.FC = () => {
   return (
     <AppProvider>
-      <MemoryRouter>
+      <BrowserRouter>
         <AppContent />
-      </MemoryRouter>
+      </BrowserRouter>
     </AppProvider>
   );
 };
