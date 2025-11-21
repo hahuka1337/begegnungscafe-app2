@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../services/store';
 import { Event, Resource } from '../types';
@@ -1147,15 +1146,8 @@ END:VCALENDAR`;
                     <Card key={event.id} onClick={() => setSearchParams({id: event.id})} className={`flex flex-col md:flex-row overflow-hidden hover:ring-2 ring-primary-100 transition-all cursor-pointer border-l-[6px] ${catConfig.border} ${isPast ? 'opacity-70 grayscale-[50%]' : ''}`}>
                        <div className="flex-1 p-4">
                           <div className="flex justify-between items-start mb-1">
-                             <div className="flex gap-2">
-                                 <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide mb-2 ${catConfig.bg} ${catConfig.color}`}>
-                                    <CatIcon size={12} /> {event.category}
-                                 </div>
-                                 {event.recurrenceRule && (
-                                     <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 text-blue-700 mb-2">
-                                        <Repeat size={12} /> Serie
-                                     </div>
-                                 )}
+                             <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wide mb-2 ${catConfig.bg} ${catConfig.color}`}>
+                                <CatIcon size={12} /> {event.category}
                              </div>
                              {status === 'joined' && <span className="text-green-600 flex items-center gap-1 text-xs font-bold"><CalendarCheck size={14}/> Angemeldet</span>}
                              {!event.isRegistrationOpen && !isPast && <span className="text-red-600 flex items-center gap-1 text-xs font-bold"><Lock size={14}/> Geschlossen</span>}
