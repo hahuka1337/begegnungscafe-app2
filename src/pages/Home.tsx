@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../services/store';
 import { Card, Button, Input, Badge } from '../components/Shared';
