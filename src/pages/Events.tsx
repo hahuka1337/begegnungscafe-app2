@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../services/store';
 import { Event, Resource } from '../types';
@@ -279,11 +280,6 @@ END:VCALENDAR`;
 
     if (end <= start) {
         alert("Endzeit muss nach der Startzeit liegen.");
-        return;
-    }
-    
-    if (newEvent.recurrence !== 'none' && !newEvent.recurrenceEnd) {
-        alert("Bitte Enddatum für die Wiederholung angeben.");
         return;
     }
 
@@ -643,13 +639,6 @@ END:VCALENDAR`;
                           {friendText}
                       </div>
                   )}
-                  
-                  {selectedEvent.recurrenceRule && (
-                      <div className="flex items-center gap-2 text-sm font-medium bg-blue-50 text-blue-800 px-3 py-2 rounded-lg">
-                          <Repeat size={16} />
-                          Wiederkehrender Termin ({selectedEvent.recurrenceRule === 'daily' ? 'Täglich' : selectedEvent.recurrenceRule === 'weekly' ? 'Wöchentlich' : 'Monatlich'})
-                      </div>
-                  )}
 
                   <div className="flex items-start gap-3">
                     <Clock className="text-primary-600 mt-0.5" size={20} />
@@ -943,7 +932,7 @@ END:VCALENDAR`;
                     </div>
 
                     {/* RECURRENCE SECTION */}
-                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg space-y-4">
+                    <div className="p-4 bg-blue-50 border border-blue-100 rounded-lg space-y-4 mb-4">
                         <div className="flex items-center gap-2 font-bold text-blue-900 mb-2">
                             <Repeat size={18} /> Wiederholung
                         </div>
@@ -964,7 +953,7 @@ END:VCALENDAR`;
                              <Input 
                                 label="Wiederholen bis" 
                                 type="date" 
-                                required={newEvent.recurrence !== 'none'}
+                                required
                                 value={newEvent.recurrenceEnd}
                                 onChange={e => setNewEvent({...newEvent, recurrenceEnd: e.target.value})}
                                 className="bg-white"
