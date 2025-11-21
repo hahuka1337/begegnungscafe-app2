@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../services/store';
 import { Button, Card, Input, Badge, ImageUpload, Select } from '../components/Shared';
-import { User, LogOut, ShieldCheck, Download, Trash2, CheckCircle, AlertCircle, QrCode, Lightbulb, X, Laptop, Calendar, Users, UserPlus, UserMinus, Smile, Globe, Lock, Eye } from 'lucide-react';
+import { User, LogOut, ShieldCheck, Download, Trash2, CheckCircle, AlertCircle, QrCode, Lightbulb, X, Laptop, Calendar, Users, UserPlus, UserMinus, Smile, Globe, Lock, Eye, Baby } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PrivacyLevel } from '../types';
 
@@ -17,6 +17,8 @@ const Profile: React.FC = () => {
       bio: '',
       job: '',
       hobbies: '',
+      gender: 'divers' as 'male' | 'female' | 'divers',
+      birthYear: '' as string | number,
       privacyDetails: 'public' as PrivacyLevel,
       privacyGroups: 'friends' as PrivacyLevel,
       privacyFriends: 'friends' as PrivacyLevel
@@ -44,6 +46,8 @@ const Profile: React.FC = () => {
             bio: currentUser.bio || '',
             job: currentUser.job || '',
             hobbies: currentUser.hobbies?.join(', ') || '',
+            gender: currentUser.gender || 'divers',
+            birthYear: currentUser.birthYear || '',
             privacyDetails: currentUser.privacySettings?.details || 'public',
             privacyGroups: currentUser.privacySettings?.groups || 'friends',
             privacyFriends: currentUser.privacySettings?.friends || 'friends'
@@ -69,6 +73,8 @@ const Profile: React.FC = () => {
         bio: formData.bio,
         job: formData.job,
         hobbies: formData.hobbies.split(',').map(s => s.trim()).filter(s => s),
+        gender: formData.gender,
+        birthYear: formData.birthYear ? parseInt(formData.birthYear.toString()) : undefined,
         privacySettings: {
             details: formData.privacyDetails,
             groups: formData.privacyGroups,
@@ -227,7 +233,29 @@ const Profile: React.FC = () => {
                    onChange={(e) => setFormData({...formData, name: e.target.value})} 
                  />
                  
-                 <div className="mb-4">
+                 <div className="grid grid-cols-2 gap-4">
+                     <Select 
+                        label="Geschlecht"
+                        value={formData.gender}
+                        onChange={e => setFormData({...formData, gender: e.target.value as any})}
+                     >
+                         <option value="male">Männlich</option>
+                         <option value="female">Weiblich</option>
+                         <option value="divers">Divers</option>
+                     </Select>
+                     <Input 
+                        label="Geburtsjahr"
+                        type="number"
+                        value={formData.birthYear}
+                        onChange={e => setFormData({...formData, birthYear: e.target.value})}
+                        placeholder="z.B. 1990"
+                     />
+                 </div>
+                 <p className="text-xs text-stone-500 -mt-3 italic flex items-center gap-1">
+                     <ShieldCheck size={12}/> Wird für automatische Gruppen (z.B. Jugend, Männer/Frauen) genutzt.
+                 </p>
+                 
+                 <div className="mb-4 mt-4">
                      <label className="block text-sm font-medium text-stone-700 mb-1">Über mich (Bio)</label>
                      <textarea 
                         className="w-full p-2 border border-stone-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-600"
@@ -330,6 +358,14 @@ const Profile: React.FC = () => {
                     <div className="flex justify-between bg-stone-50 p-2 rounded border border-stone-100 text-sm">
                         <span className="text-stone-500">Hobbys</span>
                         <span className="font-medium truncate max-w-[150px] text-right">{currentUser.hobbies && currentUser.hobbies.length > 0 ? currentUser.hobbies.join(", ") : "-"}</span>
+                    </div>
+                    <div className="flex justify-between bg-stone-50 p-2 rounded border border-stone-100 text-sm">
+                        <span className="text-stone-500">Alter / Geschlecht</span>
+                        <span className="font-medium text-right flex items-center gap-1">
+                            {currentUser.birthYear ? `${new Date().getFullYear() - currentUser.birthYear}J` : '-'}
+                            <span className="text-stone-300">|</span>
+                            {currentUser.gender === 'male' ? 'M' : currentUser.gender === 'female' ? 'W' : 'D'}
+                        </span>
                     </div>
                 </div>
             </div>
