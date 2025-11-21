@@ -217,7 +217,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       loyaltyPoints: dbUser.loyalty_points || 0,
       friends: dbUser.friends || [],
       friendRequests: dbUser.friend_requests || [],
-      privacySettings: dbUser.privacy_settings || { details: 'public', groups: 'friends', friends: 'friends' }
+      privacySettings: dbUser.privacy_settings || { details: 'public', groups: 'friends', friends: 'friends' },
+      gender: dbUser.gender,
+      birthYear: dbUser.birth_year,
+      joinedAt: dbUser.created_at
   });
 
   const mapDbEvent = (e: any): Event => ({
@@ -267,6 +270,65 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       // Upsert to app_settings
       const { error } = await supabase.from('app_settings').upsert({ key, value });
       if(error) console.error("Failed to save setting", key, error);
+  };
+
+  // --- AUTOMATIC GROUP LOGIC ---
+  const syncAutomaticGroups = async (user: User) => {
+      const autoGroupsDef = [
+          { name: 'Männer', description: 'Offene Gruppe für Männer', type: 'public', check: (u: User) => u.gender === 'male' },
+          { name: 'Frauen', description: 'Offene Gruppe für Frauen', type: 'public', check: (u: User) => u.gender === 'female' },
+          { name: 'Jugend (14-17)', description: 'Jugendgruppe', type: 'public', check: (u: User) => {
+              if(!u.birthYear) return false;
+              const age = new Date().getFullYear() - u.birthYear;
+              return age >= 14 && age <= 17;
+          }}
+      ];
+
+      // 1. Ensure groups exist
+      for (const def of autoGroupsDef) {
+          // Using local state check to minimize DB calls, assuming initial load happened
+          // In a real app, this part typically runs on backend triggers or via separate checks
+          let group = groups.find(g => g.name === def.name);
+          
+          if (!group) {
+              // Create if not exists (DB check first to be safe)
+              const { data: existing } = await supabase.from('groups').select('*').eq('name', def.name).single();
+              if (!existing) {
+                  const { data: newGroup } = await supabase.from('groups').insert([{
+                      name: def.name,
+                      description: def.description,
+                      type: def.type,
+                      members: [],
+                      moderators: []
+                  }]).select().single();
+                  if(newGroup) {
+                      setGroups(prev => [...prev, { ...newGroup, joinRequests: [], isConvertGroup: false }]);
+                      group = { ...newGroup, joinRequests: [], isConvertGroup: false };
+                  }
+              } else {
+                  group = { ...existing, joinRequests: existing.join_requests || [], isConvertGroup: existing.is_convert_group };
+                  // Sync local state if it was missing
+                  setGroups(prev => [...prev, group!]); 
+              }
+          }
+
+          if (!group) continue;
+
+          const shouldBeIn = def.check(user);
+          const isIn = group.members.includes(user.id);
+
+          if (shouldBeIn && !isIn) {
+              const newMembers = [...group.members, user.id];
+              await supabase.from('groups').update({ members: newMembers }).eq('id', group.id);
+              setGroups(prev => prev.map(g => g.id === group!.id ? { ...g, members: newMembers } : g));
+              addNotification("Gruppe", `Du wurdest automatisch zu "${group.name}" hinzugefügt.`, "info");
+          } else if (!shouldBeIn && isIn) {
+              const newMembers = group.members.filter(id => id !== user.id);
+              await supabase.from('groups').update({ members: newMembers }).eq('id', group.id);
+              setGroups(prev => prev.map(g => g.id === group!.id ? { ...g, members: newMembers } : g));
+              addNotification("Gruppe", `Du wurdest aus "${group.name}" entfernt (Kriterien nicht mehr erfüllt).`, "info");
+          }
+      }
   };
 
   // --- INITIAL DATA FETCHING & REALTIME SUBSCRIPTIONS ---
@@ -769,12 +831,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (updates.avatarUrl) dbUpdates.avatar_url = updates.avatarUrl;
       if (updates.privacySettings) dbUpdates.privacy_settings = updates.privacySettings;
       if (updates.notificationSettings) dbUpdates.notification_settings = updates.notificationSettings;
+      if (updates.gender) dbUpdates.gender = updates.gender;
+      if (updates.birthYear) dbUpdates.birth_year = updates.birthYear;
 
       const { error } = await supabase.from('profiles').update(dbUpdates).eq('id', currentUser.id);
       
       if (!error) {
-          setCurrentUser(prev => prev ? { ...prev, ...updates } : null);
-          setUsers(prev => prev.map(u => u.id === currentUser.id ? { ...u, ...updates } : u));
+          const updatedUser = { ...currentUser, ...updates } as User;
+          setCurrentUser(updatedUser);
+          setUsers(prev => prev.map(u => u.id === currentUser.id ? updatedUser : u));
+          
+          // Run automatic group sync
+          await syncAutomaticGroups(updatedUser);
+          
           addNotification("Profil", "Änderungen gespeichert.", "success");
       } else {
           addNotification("Fehler", "Speichern fehlgeschlagen.", "warning");
