@@ -1,0 +1,7 @@
+{
+  "name": "Begegnungscafé Nürnberg 3",
+  "description": "Eine Community-App für das Begegnungscafé Nürnberg zur Organisation von Events, Gruppen und Mentoring.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
